@@ -1,7 +1,7 @@
 """Drift statistics and EWMA alarm, calibrated on healthy data (empirical null)."""
 import math
 import torch
-from .timereversal import step_terms
+from .timereversal import step_terms, design, _lstsq
 
 
 def window_stats(model, traj, L):
@@ -32,3 +32,11 @@ class EwmaAlarm:
     def calibrate(cls, samples, **kw):
         s = torch.as_tensor(samples)
         return cls(s.mean().item(), s.std().item() if len(s) > 1 else 1.0, **kw)
+
+
+def odd_stat(model, traj, L=None):
+    """Held-out R^2 of the model's residual explained by ODD (dissipative) features on this window (fit on the first
+    half, scored on the second). ~0 when healthy, high for dissipative faults, ~0 for gain/payload faults."""
+    from .timereversal import localize_refit
+    with torch.no_grad():
+        return torch.tensor(localize_refit(model, traj)["odd"])

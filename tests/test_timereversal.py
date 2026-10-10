@@ -83,3 +83,27 @@ def test_localisation_flags_dissipative_fault_as_odd():
     tr = rollout(Simulator(worn, torch.zeros(4, 2), torch.zeros(4, 2), 0.01), ComputedTorque(model_from_arm(ARM), ref), 600)
     r = localize_refit(model_from_arm(ARM), tr)
     assert r["odd"] > 0.5 and r["odd"] > r["even"]
+
+
+def test_adapter_variants_converge_and_gate():
+    tr, _ = _traj(1, 400)
+    for kw in (dict(fit_gain=False), dict(fit_gain=False, fit_even=False), dict(forget=0.999, forget_fast=0.95, fit_gain=False, fit_even=False)):
+        m = model_from_arm(ARM, dv0=ARM.dv * 0.3, dc0=ARM.dc * 3)
+        ad = TraceAdapter(m, **kw)
+        ad.set_fast(True)
+        for k in range(0, 300, 10):
+            ad.update(slice_traj(tr, k, k + 10))
+        assert ((m.head.dv - ARM.dv).abs() / ARM.dv).max() < 0.15, kw
+        assert torch.allclose(m.head.gain, torch.ones(2), atol=1e-6) or kw.get("fit_gain", True)  # gain untouched when not fitted
+
+
+def test_odd_stat_high_for_friction_fault_low_for_gain_fault():
+    from tracearrow.detect import odd_stat
+    ref = MultisineRef(2, 4, amp=0.6, seed=7)
+    ctrl = ComputedTorque(model_from_arm(ARM), ref)
+    def stat(plant):
+        tr = rollout(Simulator(plant, torch.zeros(4, 2), torch.zeros(4, 2), 0.01), ctrl, 300)
+        return odd_stat(model_from_arm(ARM), slice_traj(tr, 100, 300)).item()
+    assert stat(ARM.replace(dv=ARM.dv * 4, dc=ARM.dc * 3)) > 0.5
+    assert stat(ARM.replace(gain=ARM.gain * 0.7)) < 0.2
+    assert stat(ARM) < 0.2
