@@ -1,4 +1,21 @@
+# Python
 __pycache__/
+*.py[cod]
 *.egg-info/
+.venv/
+venv/
 .pytest_cache/
 .ipynb_checkpoints/
+
+# Data and artifacts (never commit)
+data/
+*.onnx
+*.pt
+*.pth
+results/raw/
+mlruns/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
