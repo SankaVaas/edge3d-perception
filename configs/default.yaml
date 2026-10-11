@@ -1,0 +1,25 @@
+# Default experiment config for edge3d-perception.
+data:
+  root: data/rgbd_dataset_freiburg1_xyz
+  max_time_diff: 0.02      # seconds, RGB<->depth timestamp association
+  stride: 5                # use every Nth associated frame
+  max_frames: 200          # cap for fast CPU runs
+  depth_scale: 5000.0      # TUM: raw uint16 value 5000 == 1 metre
+  min_depth: 0.1           # metres, valid range used for anchors and metrics
+  max_depth: 8.0
+
+depth:                     # used from Day 2
+  model: depth-anything/Depth-Anything-V2-Small-hf
+  input_size: 518
+  output_space: disparity  # relative inverse depth (affine-invariant)
+
+alignment:
+  num_anchors: 200         # simulated sparse depth sensor
+  method: ransac           # lstsq | ransac | huber
+  space: disparity         # fit in disparity or depth space
+  seed: 0
+
+benchmark:                 # used from Day 3
+  warmup: 10
+  runs: 50
+  threads: 1               # fixed for reproducible CPU latency

@@ -1,13 +1,18 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "tracearrow"
+name = "edge3d-perception"
 version = "0.1.0"
-description = "TRACE: Time-Reversal Asymmetry Control & Estimation"
+description = "CPU-first 3D scene perception pipeline with sparse-anchor depth alignment and an accuracy-latency benchmark harness."
 requires-python = ">=3.9"
-dependencies = ["torch>=2.1", "numpy", "scipy", "matplotlib"]
+license = { text = "MIT" }
+dependencies = ["numpy", "opencv-python-headless", "pyyaml"]
 
 [tool.setuptools.packages.find]
-include = ["tracearrow*"]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
